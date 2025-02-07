@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           // This is the theme of your application.
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
+          colorScheme: ColorScheme.fromSeed(seedColor: Color.fromRGBO(0, 255, 0, 1.0)),
         ),
         home: MyHomePage(),
       ),
@@ -58,6 +58,10 @@ class MyHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     // `MyHomePage` tracks changes to the app's current state using the watch method:
     var appState = context.watch<MyAppState>();
+    // Extract `appState`, and accesses the only member of that class,
+    // `current` (which is a `WordPair`) into a separate variable for
+    // use in the `BigCard` widget:
+    var pair = appState.current;
 
   // Every build method must return a widget or a nested tree of widgets. In this case,
   // the top-level widget is `Scaffold`, it's a helpful widget that is found in
@@ -66,21 +70,85 @@ class MyHomePage extends StatelessWidget {
       // Column is one of the most basic layout widgets in Flutter.
       // It takes any number of children and puts them in a column from top to bottom.
       // By default, the column visually places its children at the top.
-      body: Column(
-        children: [
-          Text('A random awesome idea:'),
-          // This second `Text` widget takes `appState`, and accesses the only member
-          // of that class, `current` (which is a `WordPair`).
-          // `WordPair` provides several helpful getters, such as `asUpperCase`,
-          // `asPascalCase` or `asSnakeCase`. Here, we simply use `asLowerCase`.
-          Text(appState.current.asLowerCase),
-          ElevatedButton(
-            onPressed: () {
-              appState.getNext();
-            },
-            child: Text('Next'),
-          ),
-        ],
+      body: Center( // <- This centers the `Column` itself
+        child: Column(
+          // This centers the children inside the Column along its main (vertical) axis:
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text("Here's a random name:"),
+            // The `SizedBox` widget just takes space and doesn't render anything by itself.
+            // It's commonly used to create visual "gaps":
+            SizedBox(height: 30),
+            BigCard(pair: pair),
+            SizedBox(height: 30),
+            ElevatedButton(
+              onPressed: () {
+                appState.getNext();
+              },
+              child: Text('Next'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class BigCard extends StatelessWidget {
+  const BigCard({
+    super.key,
+    required this.pair,
+  });
+
+  final WordPair pair;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    // `theme.textTheme` accesses the app's font theme:
+    // - This class includes members such as `bodyMedium` (for standard
+    //   text of medium size), `caption` (for captions of images),
+    //   or `headlineLarge` (for large headlines).
+    // - The `displayMedium` property is a large style meant for display text.
+    //   The word display is used in the typographic sense here, such as in
+    //   display typeface. The documentation for `displayMedium` says that
+    //   "display styles are reserved for short, important text".
+    // - The theme's `displayMedium` property could theoretically be null.
+    //   Dart is null-safe, so it won't let you call methods of objects that
+    //   are potentially null. In this case though, you can use the ! operator
+    //   ("bang operator") to assure Dart `displayMedium` is not null here.
+    // - Calling `copyWith()` on `displayMedium` returns a copy of the text
+    //   style with the changes you define. In this case, you're only changing
+    //   the text's color.
+    final style = theme.textTheme.displayMedium!.copyWith(
+      // The `colorScheme`'s onPrimary property defines a color that is
+      // a good fit for use on the app's primary color:
+      color: theme.colorScheme.onPrimary,
+    );
+
+
+    return Card(
+      // The `colorScheme` property contains many colors, and `primary`
+      // is the most prominent, defining color of the app:
+      color: theme.colorScheme.primary,
+      child: Padding(
+        // Flutter uses Composition over Inheritance whenever it can.
+        // Here, instead of padding being an attribute of Text, it's a widget!
+        // This way, widgets can focus on their single responsibility, such that
+        // the developer has total freedom in how to compose the UI.
+        // For example, you can use the `Padding` widget to pad text, images,
+        // buttons, your own custom widgets, or the whole app.
+        // The widget doesn't care what it's wrapping.
+        padding: const EdgeInsets.all(20),
+        // The pair `WordPair` provides several helpful getters, such as `asUpperCase`,
+        // `asPascalCase` or `asSnakeCase`. Here, we simply use `asLowerCase`:
+        child: Text(
+          pair.asLowerCase,
+          style: style,
+          // `semanticsLabel` should replace the default text,
+          // but doesn't seem to be working:
+          semanticsLabel: '${pair.first} ${pair.second}',
+        ),
       ),
     );
   }

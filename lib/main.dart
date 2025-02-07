@@ -63,11 +63,107 @@ class MyAppState extends ChangeNotifier {
   }
 }
 
-class MyHomePage extends StatelessWidget {
-  // This widget is the home page of your application.
+// `MyHomePage` is a stateful widge, a type of widget that has `State`.
+// This widget is the home page of your application:
+class MyHomePage extends StatefulWidget {
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+// The underscore _ at the start of `_MyHomePageState` makes that class private,
+// and this is enforced by the compiler. This class extends `State`, and can therefore
+// manage its own values; it can change itself.
+class _MyHomePageState extends State<MyHomePage> {
+  var selectedIndex = 0;
+
   @override
   // Every widget defines a `build()` method that's automatically called every time
   // the widget's circumstances change so that the widget is always up to date:
+  Widget build(BuildContext context) {
+    // Declare a new variable `page` of the type `Widget`:
+    Widget page;
+    // The `switch` statement assigns a screen to `page`, according to
+    // the current value in `selectedIndex`:
+    switch (selectedIndex) {
+      case 0:
+        page = GeneratorPage();
+        break;
+      case 1:
+      // Since there's no `FavoritesPage` yet, we use `Placeholder`;
+      // a handy widget that draws a crossed rectangle wherever you place it,
+      // marking that part of the UI as unfinished:
+        page = Placeholder();
+        break;
+      default:
+      // Applying the "fail-fast principle", the switch statement also makes sure
+      // to throw an error if `selectedIndex` is neither 0 or 1, which is
+      // really useful if you ever add a new destination to the navigation rail
+      // and forget to update this code:
+        throw UnimplementedError('no widget for $selectedIndex');
+    }
+
+    // `LayoutBuilder`'s builder callback is called every time the constraints change.
+    // This happens for instance when tThe user resizes the app's window or
+    // rotates their phone from portrait to landscape mode:
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Scaffold(
+          // `_MyHomePageState` contains a `Row` with 2 children:
+          // a `SafeArea` widget and an `Expanded` widget:
+          body: Row(
+            children: [
+              // The `SafeArea` ensures that its child is not obscured by a hardware notch
+              // or a status bar. In this app, the widget wraps around `NavigationRail`
+              // to prevent the navigation buttons from being obscured by a mobile status bar:
+              SafeArea(
+                child: NavigationRail(
+                  // Boolean indicating if the labels next to the icons should be shown:
+                  // (only show when screen is equal or wider than 600 (logical) pixels)
+                  extended: constraints.maxWidth >= 600,
+                  destinations: [
+                    NavigationRailDestination(
+                      icon: Icon(Icons.home),
+                      label: Text('Home'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.favorite),
+                      label: Text('Favorites'),
+                    ),
+                  ],
+                  // A selected index of 0 selects the first destination,
+                  // a selected index of 1 selects the second destination, and so on:
+                  selectedIndex: selectedIndex,
+                  // `NavigationRail` also defines what happens when the user selects one
+                  // of the destinations with `onDestinationSelected`. When the
+                  // `onDestinationSelected` callback is called, you assign the destination
+                  // to `selectedIndex` inside a `setState()` call:
+                  onDestinationSelected: (value) {
+                    setState(() {
+                      selectedIndex = value;
+                    });
+                  },
+                ),
+              ),
+              // `Expanded` widgets are extremely useful in rows and columns — they let you
+              // express layouts where some children take only as much space as they need
+              // (`SafeArea`, in this case) and other widgets should take as much of the
+              // remaining room as possible (`Expanded`, in this case):
+              Expanded(
+                child: Container(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  child: page, // <- updates the current page based on the `selectedIndex`
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    );
+  }
+}
+
+class GeneratorPage extends StatelessWidget {
+  @override
   Widget build(BuildContext context) {
     // `MyHomePage` tracks changes to the app's current state using the watch method:
     var appState = context.watch<MyAppState>();
@@ -85,46 +181,39 @@ class MyHomePage extends StatelessWidget {
       icon = Icons.favorite_border;
     }
 
-  // Every build method must return a widget or a nested tree of widgets. In this case,
-  // the top-level widget is `Scaffold`, it's a helpful widget that is found in
-  // the vast majority of real-world Flutter apps.
-    return Scaffold(
-      // Column is one of the most basic layout widgets in Flutter.
-      // It takes any number of children and puts them in a column from top to bottom.
-      // By default, the column visually places its children at the top.
-      body: Center( // <- This centers the `Column` itself
-        child: Column(
-          // This centers the children inside the Column along its main (vertical) axis:
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text("Here's a random name:"),
-            // The `SizedBox` widget just takes space and doesn't render anything by itself.
-            // It's commonly used to create visual "gaps":
-            SizedBox(height: 30),
-            BigCard(pair: pair),
-            SizedBox(height: 30),
-            Row(
-              // This tells `Row` not to take all available horizontal space:
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () {
-                    appState.toggleFavorite();
-                  },
-                  icon: Icon(icon),
-                  label: Text('Like'),
-                ),
-                SizedBox(width: 30),
-                ElevatedButton(
-                  onPressed: () {
-                    appState.getNext();
-                  },
-                  child: Text('Next'),
-                ),
-              ],
-            ),
-          ],
-        ),
+    // Column is one of the most basic layout widgets in Flutter.
+    // It takes any number of children and puts them in a column from top to bottom.
+    // By default, the column visually places its children at the top.
+    return Center( // <- This centers the `Column` itself
+      child: Column(
+        // This centers the children inside the Column along its main (vertical) axis:
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          BigCard(pair: pair),
+          // The `SizedBox` widget just takes space and doesn't render anything by itself.
+          // It's commonly used to create visual "gaps":
+          SizedBox(height: 10),
+          Row(
+            // This tells `Row` not to take all available horizontal space:
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ElevatedButton.icon(
+                onPressed: () {
+                  appState.toggleFavorite();
+                },
+                icon: Icon(icon),
+                label: Text('Like'),
+              ),
+              SizedBox(width: 10),
+              ElevatedButton(
+                onPressed: () {
+                  appState.getNext();
+                },
+                child: Text('Next'),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

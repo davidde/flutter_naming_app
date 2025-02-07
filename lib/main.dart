@@ -48,6 +48,19 @@ class MyAppState extends ChangeNotifier {
     current = WordPair.random();
     notifyListeners();
   }
+
+  // The `favorites` property is initialized with an empty list of word pairs;
+  // there can never be any unwanted objects (like `null`) in there:
+  var favorites = <WordPair>[];
+
+  void toggleFavorite() {
+    if (favorites.contains(current)) {
+      favorites.remove(current);
+    } else {
+      favorites.add(current);
+    }
+    notifyListeners();
+  }
 }
 
 class MyHomePage extends StatelessWidget {
@@ -62,6 +75,15 @@ class MyHomePage extends StatelessWidget {
     // `current` (which is a `WordPair`) into a separate variable for
     // use in the `BigCard` widget:
     var pair = appState.current;
+
+    // Choose the appropriate "Like" icon depending on whether
+    // the current word pair is already in favorites:
+    IconData icon;
+    if (appState.favorites.contains(pair)) {
+      icon = Icons.favorite;
+    } else {
+      icon = Icons.favorite_border;
+    }
 
   // Every build method must return a widget or a nested tree of widgets. In this case,
   // the top-level widget is `Scaffold`, it's a helpful widget that is found in
@@ -81,11 +103,25 @@ class MyHomePage extends StatelessWidget {
             SizedBox(height: 30),
             BigCard(pair: pair),
             SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: () {
-                appState.getNext();
-              },
-              child: Text('Next'),
+            Row(
+              // This tells `Row` not to take all available horizontal space:
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () {
+                    appState.toggleFavorite();
+                  },
+                  icon: Icon(icon),
+                  label: Text('Like'),
+                ),
+                SizedBox(width: 30),
+                ElevatedButton(
+                  onPressed: () {
+                    appState.getNext();
+                  },
+                  child: Text('Next'),
+                ),
+              ],
             ),
           ],
         ),

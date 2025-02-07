@@ -87,13 +87,8 @@ class _MyHomePageState extends State<MyHomePage> {
     switch (selectedIndex) {
       case 0:
         page = GeneratorPage();
-        break;
       case 1:
-      // Since there's no `FavoritesPage` yet, we use `Placeholder`;
-      // a handy widget that draws a crossed rectangle wherever you place it,
-      // marking that part of the UI as unfinished:
-        page = Placeholder();
-        break;
+        page = FavoritesPage();
       default:
       // Applying the "fail-fast principle", the switch statement also makes sure
       // to throw an error if `selectedIndex` is neither 0 or 1, which is
@@ -215,6 +210,38 @@ class GeneratorPage extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class FavoritesPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+
+    // If the list of favorites is empty, show a centered message "No favorites yet":
+    if (appState.favorites.isEmpty) {
+      return Center(
+        child: Text('No favorites yet.'),
+      );
+    }
+
+    // Otherwise, show a (scrollable) list starting with a summary,
+    // and then iterating through all favorites to construct a `ListTile`
+    // widget with title and icon for each one:
+    return ListView(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Text('You have '
+              '${appState.favorites.length} favorites:'),
+        ),
+        for (var pair in appState.favorites)
+          ListTile(
+            leading: Icon(Icons.favorite),
+            title: Text(pair.asLowerCase),
+          ),
+      ],
     );
   }
 }
